@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><beast beautitemplate='Standard' beautistatus='' namespace="beast.core:beast.evolution.alignment:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.likelihood" required="BEAST v2.5.1" version="2.5">
+
+
+<data id="CoalExp" name="alignment">
+<!--SEQ_DATA-->  
+</data>
+
+
+<RPNcalculator spec="beast.math.statistic.RPNcalculator" id="R0" expression="delta growthRate.t:CoalExp + delta /">
+  <parameter idref="growthRate.t:CoalExp"/>
+  <parameter idref="delta"/>
+</RPNcalculator>
+
+
+    
+
+
+    
+<map name="Uniform" >beast.math.distributions.Uniform</map>
+<map name="Exponential" >beast.math.distributions.Exponential</map>
+<map name="LogNormal" >beast.math.distributions.LogNormalDistributionModel</map>
+<map name="Normal" >beast.math.distributions.Normal</map>
+<map name="Beta" >beast.math.distributions.Beta</map>
+<map name="Gamma" >beast.math.distributions.Gamma</map>
+<map name="LaplaceDistribution" >beast.math.distributions.LaplaceDistribution</map>
+<map name="prior" >beast.math.distributions.Prior</map>
+<map name="InverseGamma" >beast.math.distributions.InverseGamma</map>
+<map name="OneOnX" >beast.math.distributions.OneOnX</map>
+
+
+<run id="mcmc" spec="MCMC" chainLength="20000000">
+    <state id="state" storeEvery="5000">
+        <tree id="Tree.t:CoalExp" name="stateNode">
+          <trait id="dateTrait.t:CoalExp" spec="beast.evolution.tree.TraitSet"
+		 traitname="date" value="DATE_INFO">
+                <taxa id="TaxonSet.CoalExp" spec="TaxonSet">
+                    <alignment idref="CoalExp"/>
+                </taxa>
+            </trait>
+            <taxonset idref="TaxonSet.CoalExp"/>
+        </tree>
+        <parameter id="clockRate.c:CoalExp" name="stateNode">0.25</parameter>
+        <parameter id="ePopSize.t:CoalExp" name="stateNode">0.3</parameter>
+        <parameter id="growthRate.t:CoalExp" name="stateNode">3.0E-4</parameter>
+	<parameter id="delta" name="stateNode">51</parameter>
+    </state>
+
+    <init id="RandomTree.t:CoalExp" spec="beast.evolution.tree.RandomTree" estimate="false" initial="@Tree.t:CoalExp" taxa="@CoalExp">
+        <populationModel id="ConstantPopulation0.t:CoalExp" spec="ConstantPopulation">
+            <parameter id="randomPopSize.t:CoalExp" name="popSize">1.0</parameter>
+        </populationModel>
+    </init>
+
+    <distribution id="posterior" spec="util.CompoundDistribution">
+        <distribution id="prior" spec="util.CompoundDistribution">
+            <distribution id="CoalescentExponential.t:CoalExp" spec="Coalescent">
+                <populationModel id="ExponentialGrowth.t:CoalExp" spec="ExponentialGrowth" growthRate="@growthRate.t:CoalExp" popSize="@ePopSize.t:CoalExp"/>
+                <treeIntervals id="TreeIntervals.t:CoalExp" spec="TreeIntervals" tree="@Tree.t:CoalExp"/>
+            </distribution>
+            <prior id="ClockPrior.c:CoalExp" name="distribution" x="@clockRate.c:CoalExp">
+                <Uniform id="Uniform.0" name="distr" lower="0.0" upper="0.5"/>
+            </prior>
+            <prior id="ePopSizePrior.t:CoalExp" name="distribution" x="@ePopSize.t:CoalExp">
+                <OneOnX id="OneOnX.1" name="distr"/>
+            </prior>
+            <prior id="GrowthRatePrior.t:CoalExp" name="distribution" x="@growthRate.t:CoalExp">
+                <LaplaceDistribution id="LaplaceDistribution.0" name="distr">
+                    <parameter id="RealParameter.7" estimate="false" name="mu">0.001</parameter>
+                    <parameter id="RealParameter.8" estimate="false" name="scale">30.701135</parameter>
+                </LaplaceDistribution>
+            </prior>
+	    <prior id="detaPrior" name="distribution" x="@delta">
+              <Normal id="norm1" name="distr" mean="50" sigma="1"/>
+            </prior>
+        </distribution>
+        <distribution id="likelihood" spec="util.CompoundDistribution" useThreads="true">
+            <distribution id="treeLikelihood.CoalExp" spec="ThreadedTreeLikelihood" data="@CoalExp" tree="@Tree.t:CoalExp">
+                <siteModel id="SiteModel.s:CoalExp" spec="SiteModel">
+                    <parameter id="mutationRate.s:CoalExp" estimate="false" name="mutationRate">1.0</parameter>
+                    <parameter id="gammaShape.s:CoalExp" estimate="false" name="shape">1.0</parameter>
+                    <parameter id="proportionInvariant.s:CoalExp" estimate="false" lower="0.0" name="proportionInvariant" upper="1.0">0.0</parameter>
+                    <substModel id="JC69.s:CoalExp" spec="JukesCantor"/>
+                </siteModel>
+                <branchRateModel id="StrictClock.c:CoalExp" spec="beast.evolution.branchratemodel.StrictClockModel" clock.rate="@clockRate.c:CoalExp"/>
+            </distribution>
+        </distribution>
+    </distribution>
+
+    <operator id="StrictClockRateScaler.c:CoalExp" spec="ScaleOperator" parameter="@clockRate.c:CoalExp" scaleFactor="0.75" weight="3.0"/>
+    <operator id="strictClockUpDownOperator.c:CoalExp" spec="UpDownOperator" scaleFactor="0.75" weight="3.0">
+        <up idref="clockRate.c:CoalExp"/>
+        <down idref="Tree.t:CoalExp"/>
+    </operator>
+    <operator id="CoalescentExponentialTreeScaler.t:CoalExp" spec="ScaleOperator" scaleFactor="0.5" tree="@Tree.t:CoalExp" weight="3.0"/>
+    <operator id="CoalescentExponentialTreeRootScaler.t:CoalExp" spec="ScaleOperator" rootOnly="true" scaleFactor="0.5" tree="@Tree.t:CoalExp" weight="3.0"/>
+    <operator id="CoalescentExponentialUniformOperator.t:CoalExp" spec="Uniform" tree="@Tree.t:CoalExp" weight="30.0"/>
+    <operator id="CoalescentExponentialSubtreeSlide.t:CoalExp" spec="SubtreeSlide" tree="@Tree.t:CoalExp" weight="15.0"/>
+    <operator id="CoalescentExponentialNarrow.t:CoalExp" spec="Exchange" tree="@Tree.t:CoalExp" weight="15.0"/>
+    <operator id="CoalescentExponentialWide.t:CoalExp" spec="Exchange" isNarrow="false" tree="@Tree.t:CoalExp" weight="3.0"/>
+    <operator id="CoalescentExponentialWilsonBalding.t:CoalExp" spec="WilsonBalding" tree="@Tree.t:CoalExp" weight="3.0"/>
+    <operator id="ePopSizeScaler.t:CoalExp" spec="ScaleOperator" parameter="@ePopSize.t:CoalExp" scaleFactor="0.75" weight="3.0"/>
+    <operator id="GrowthRateRandomWalk.t:CoalExp" spec="RealRandomWalkOperator" parameter="@growthRate.t:CoalExp" weight="3.0" windowSize="1.0"/>
+    <operator id="deltaOperator" spec="RealRandomWalkOperator" parameter="@delta" weight="2" windowSize="1.0"/>
+    <logger id="tracelog" fileName="OUTFILE.log" logEvery="1000" model="@posterior" sanitiseHeaders="true" sort="smart">
+        <log idref="posterior"/>
+        <log idref="likelihood"/>
+        <log idref="prior"/>
+        <log idref="treeLikelihood.CoalExp"/>
+        <log id="TreeHeight.t:CoalExp" spec="beast.evolution.tree.TreeHeightLogger" tree="@Tree.t:CoalExp"/>
+        <log idref="clockRate.c:CoalExp"/>
+        <log idref="CoalescentExponential.t:CoalExp"/>
+        <log idref="ePopSize.t:CoalExp"/>
+        <log idref="growthRate.t:CoalExp"/>
+	<log idref="R0"/>
+	<log idref="delta"/>
+    </logger>
+
+    <logger id="screenlog" logEvery="1000">
+        <log idref="posterior"/>
+        <log id="ESS.0" spec="util.ESS" arg="@posterior"/>
+        <log idref="likelihood"/>
+        <log idref="prior"/>
+	<log idref="R0"/>
+	<log idref="delta"/>
+    </logger>
+
+    <!--logger id="treelog.t:CoalExp" fileName="OUTFILE.trees" logEvery="1000" mode="tree">
+        <log id="TreeWithMetaDataLogger.t:CoalExp" spec="beast.evolution.tree.TreeWithMetaDataLogger" tree="@Tree.t:CoalExp"/>
+    </logger-->
+
+</run>
+
+</beast>

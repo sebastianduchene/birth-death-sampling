@@ -1,0 +1,42 @@
+<beast version='2.0'
+       namespace='master:master.model:master.steppers:master.conditions:master.postprocessors:master.outputs'>
+
+    <run spec='InheritanceTrajectory' samplePopulationSizes="true" verbosity="3" simulationTime="0.1"><!-- 0.2 -->
+        <model spec='Model' id='model'>
+            <population spec='Population' populationName='I' id='I'/>
+            <population spec='Population' populationName='R' id='R'/>
+	    <population spec="Population" populationName="I_sampled" id="I_sampled"/>
+	    <reaction spec='Reaction' reactionName="Birth" rate="182"> 
+              I -> I + I
+            </reaction>
+	    <reaction spec="Reaction" reactionName="Death" rate="86.45">
+              I -> R
+            </reaction>
+	    <reaction spec="Reaction" reactionName="Sampling" rate="4.55">  
+	      I -> I_sampled
+	    </reaction>
+        </model>
+        <initialState spec='InitState'>
+            <lineageSeed spec='Individual' population='@I'/>
+            <populationSize spec='PopulationSize' population='@R' size='0'/>
+	    <populationSize spec="PopulationSize" population="@I_sampled" size="0"/>
+        </initialState>
+        <populationEndCondition spec='PopulationEndCondition'
+				population='@I' threshold="0" exceedCondition="false"
+				isRejection="true"/>
+
+        <!--populationEndCondition spec='PopulationEndCondition'
+				threshold="100" population='@I_sampled'
+				isRejection="false"/-->
+	<postSimCondition spec="LeafCountPostSimCondition"
+			  nLeaves="100" exact="false" exceedCondition="true"/>
+	<postSimCondition spec="LeafCountPostSimCondition"
+			  nLeaves="150" exact="false" exceedCondition="false"/>
+	
+	<inheritancePostProcessor spec="LineageFilter" reactionName="Sampling"/>
+	<!--inheritancePostProcessor spec="LineageFilter" reactionName="NONE" discard="true"/-->
+        <!--output spec='NewickOutput' fileName="BDTree_hetero_fixedN_MASTER.newick.tree"/-->
+	<output spec="NexusOutput" fileName="BDTree_MASTER_constant_samp.nexus.tree"/>
+	<output spec='JsonOutput' fileName="BDTree_MASTER_constant_samp.json"/>
+    </run>
+</beast>

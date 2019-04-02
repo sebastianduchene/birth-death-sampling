@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><beast beautitemplate='Standard' beautistatus='' namespace="beast.core:beast.evolution.alignment:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.likelihood" required="BEAST v2.5.1:BDSKY v1.4.3" version="2.5">
+
+
+    <data id="BDskyline" name="alignment">
+                        <!--sequence id="seq_TAXON_NAME" taxon="TAXON_NAME" totalcount="4" value="SEQ_DATA"/-->
+                        <!--SEQ_DATA-->
+                    </data>
+    
+<map name="Uniform" >beast.math.distributions.Uniform</map>
+<map name="Exponential" >beast.math.distributions.Exponential</map>
+<map name="LogNormal" >beast.math.distributions.LogNormalDistributionModel</map>
+<map name="Normal" >beast.math.distributions.Normal</map>
+<map name="Beta" >beast.math.distributions.Beta</map>
+<map name="Gamma" >beast.math.distributions.Gamma</map>
+<map name="LaplaceDistribution" >beast.math.distributions.LaplaceDistribution</map>
+<map name="prior" >beast.math.distributions.Prior</map>
+<map name="InverseGamma" >beast.math.distributions.InverseGamma</map>
+<map name="OneOnX" >beast.math.distributions.OneOnX</map>
+
+
+<function spec="beast.core.util.Slice" id="one" arg="@samplingProportionPrior.t:BDskyline" index="0" count="1"/>
+<function spec="beast.core.util.Slice" id="two" arg="@samplingProportionPrior.t:BDskyline" index="1" count="1"/>
+	
+
+<run id="mcmc" spec="MCMC" chainLength="50000000">
+    <state id="state" storeEvery="5000">
+        <tree id="Tree.t:BDskyline" name="stateNode">
+            <trait id="dateTrait.t:BDskyline" spec="beast.evolution.tree.TraitSet" traitname="date" value="DATE_INFO">
+                <taxa id="TaxonSet.BDskyline" spec="TaxonSet">
+                    <alignment idref="BDskyline"/>
+                </taxa>
+            </trait>
+            <taxonset idref="TaxonSet.BDskyline"/>
+        </tree>
+        <parameter id="clockRate.c:BDskyline" name="stateNode">0.25</parameter>
+        <parameter id="origin.t:BDskyline" lower="0.0" name="stateNode" upper="Infinity">10.0</parameter>
+        <parameter id="samplingProportion.t:BDskyline" lower="0.0" name="stateNode" upper="1.0" dimension="2">0.01</parameter>
+        <parameter id="becomeUninfectiousRate.t:BDskyline" lower="0.0" name="stateNode" upper="Infinity" dimension="1">10.0</parameter>
+        <parameter id="reproductiveNumber.t:BDskyline" dimension="1" lower="0.0" name="stateNode" upper="Infinity">2.0</parameter>
+    </state>
+
+    <init id="RandomTree.t:BDskyline" spec="beast.evolution.tree.RandomTree" estimate="false" initial="@Tree.t:BDskyline" taxa="@BDskyline">
+        <populationModel id="ConstantPopulation0.t:BDskyline" spec="ConstantPopulation">
+            <parameter id="randomPopSize.t:BDskyline" name="popSize">1.0</parameter>
+        </populationModel>
+    </init>
+
+    <distribution id="posterior" spec="util.CompoundDistribution">
+        <distribution id="prior" spec="util.CompoundDistribution">
+          <distribution id="BirthDeathSkySerial.t:BDskyline"
+			spec="beast.evolution.speciation.BirthDeathSkylineModel"
+			becomeUninfectiousRate="@becomeUninfectiousRate.t:BDskyline"
+			origin="@origin.t:BDskyline"
+			reproductiveNumber="@reproductiveNumber.t:BDskyline"
+			samplingProportion="@samplingProportion.t:BDskyline" tree="@Tree.t:BDskyline">
+	    <!-- reverse times, where sampling change occurs at 0.075 since the start of the process
+		because time is it is 0.15 time units long, we set 0.1125. Change for other simulation settings -->
+	    
+	    <samplingRateChangeTimes spec="beast.core.parameter.RealParameter" value="0.1125 0"/>
+	    
+	    <reverseTimeArrays spec="beast.core.parameter.BooleanParameter" value="false true true false false"/>
+	  </distribution>
+          <prior id="becomeUninfectiousRatePrior.t:BDskyline" name="distribution" x="@becomeUninfectiousRate.t:BDskyline">
+		<Normal id="Normal1" name="distr" mean="50" sigma="1"/>
+            </prior>
+            <prior id="ClockPrior.c:BDskyline" name="distribution" x="@clockRate.c:BDskyline">
+                <Uniform id="Uniform.0" name="distr" lower="0.0" upper="0.5"/>
+            </prior>
+            <prior id="originPrior.t:BDskyline" name="distribution" x="@origin.t:BDskyline">
+                <Uniform id="Uniform.3" name="distr" upper="Infinity"/>
+            </prior>
+            <prior id="reproductiveNumberPrior.t:BDskyline" name="distribution" x="@reproductiveNumber.t:BDskyline">
+                <LogNormal id="LogNormalDistributionModel.1" name="distr">
+                    <parameter id="RealParameter.5" estimate="false" name="M">0.0</parameter>
+                    <parameter id="RealParameter.6" estimate="false" name="S">1.0</parameter>
+                </LogNormal>
+            </prior>
+            <prior id="samplingProportionPrior.t:BDskyline" name="distribution" x="@samplingProportion.t:BDskyline">
+                <Beta id="Beta.0" name="distr">
+                    <parameter id="RealParameter.1" estimate="false" name="alpha">1.0</parameter>
+                    <parameter id="RealParameter.2" estimate="false" name="beta">1.0</parameter>
+                </Beta>
+            </prior>
+        </distribution>
+        <distribution id="likelihood" spec="util.CompoundDistribution" useThreads="true">
+            <distribution id="treeLikelihood.BDskyline" spec="ThreadedTreeLikelihood" data="@BDskyline" tree="@Tree.t:BDskyline">
+                <siteModel id="SiteModel.s:BDskyline" spec="SiteModel">
+                    <parameter id="mutationRate.s:BDskyline" estimate="false" name="mutationRate">1.0</parameter>
+                    <parameter id="gammaShape.s:BDskyline" estimate="false" name="shape">1.0</parameter>
+                    <parameter id="proportionInvariant.s:BDskyline" estimate="false" lower="0.0" name="proportionInvariant" upper="1.0">0.0</parameter>
+                    <substModel id="JC69.s:BDskyline" spec="JukesCantor"/>
+                </siteModel>
+                <branchRateModel id="StrictClock.c:BDskyline" spec="beast.evolution.branchratemodel.StrictClockModel" clock.rate="@clockRate.c:BDskyline"/>
+            </distribution>
+        </distribution>
+    </distribution>
+
+    <operator id="StrictClockRateScaler.c:BDskyline" spec="ScaleOperator" parameter="@clockRate.c:BDskyline" scaleFactor="0.75" weight="3.0"/>
+    <operator id="strictClockUpDownOperator.c:BDskyline" spec="UpDownOperator" scaleFactor="0.75" weight="3.0">
+        <up idref="clockRate.c:BDskyline"/>
+        <down idref="Tree.t:BDskyline"/>
+    </operator>
+    <operator id="BDSKY_serialtreeScaler.t:BDskyline" spec="ScaleOperator" scaleFactor="0.5" tree="@Tree.t:BDskyline" weight="3.0"/>
+    <operator id="BDSKY_serialtreeRootScaler.t:BDskyline" spec="ScaleOperator" rootOnly="true" scaleFactor="0.5" tree="@Tree.t:BDskyline" weight="3.0"/>
+    <operator id="BDSKY_serialUniformOperator.t:BDskyline" spec="Uniform" tree="@Tree.t:BDskyline" weight="30.0"/>
+    <operator id="BDSKY_serialSubtreeSlide.t:BDskyline" spec="SubtreeSlide" tree="@Tree.t:BDskyline" weight="15.0"/>
+    <operator id="BDSKY_serialnarrow.t:BDskyline" spec="Exchange" tree="@Tree.t:BDskyline" weight="15.0"/>
+    <operator id="BDSKY_serialwide.t:BDskyline" spec="Exchange" isNarrow="false" tree="@Tree.t:BDskyline" weight="3.0"/>
+    <operator id="BDSKY_serialWilsonBalding.t:BDskyline" spec="WilsonBalding" tree="@Tree.t:BDskyline" weight="3.0"/>
+    <operator id="becomeUninfectiousRateScaler.t:BDskyline" spec="ScaleOperator" parameter="@becomeUninfectiousRate.t:BDskyline" scaleFactor="0.75" weight="2.0"/>
+    <operator id="samplingScaler.t:BDskyline" spec="ScaleOperator" parameter="@samplingProportion.t:BDskyline" scaleFactor="0.75" weight="2.0"/>
+    <operator id="reproductiveNumberScaler.t:BDskyline" spec="ScaleOperator" parameter="@reproductiveNumber.t:BDskyline" scaleFactor="0.75" weight="10.0"/>
+
+    <operator id="updownBD.t:BDskyline" spec="UpDownOperator" scaleFactor="0.75" weight="2.0">
+        <up idref="reproductiveNumber.t:BDskyline"/>
+        <down idref="becomeUninfectiousRate.t:BDskyline"/>
+    </operator>
+
+    <operator id="origScaler.t:BDskyline" spec="ScaleOperator" parameter="@origin.t:BDskyline" scaleFactor="0.75" weight="1.0"/>
+
+    <logger id="tracelog" fileName="OUTFILE.log" logEvery="5000" model="@posterior" sanitiseHeaders="true" sort="smart">
+        <log idref="posterior"/>
+        <log idref="likelihood"/>
+        <log idref="prior"/>
+        <log idref="treeLikelihood.BDskyline"/>
+        <log id="TreeHeight.t:BDskyline" spec="beast.evolution.tree.TreeHeightLogger" tree="@Tree.t:BDskyline"/>
+        <log idref="clockRate.c:BDskyline"/>
+        <log idref="BirthDeathSkySerial.t:BDskyline"/>
+        <log idref="origin.t:BDskyline"/>
+        <log idref="samplingProportion.t:BDskyline"/>
+        <log idref="becomeUninfectiousRate.t:BDskyline"/>
+        <log idref="reproductiveNumber.t:BDskyline"/>
+	<log id="death" spec="beast.math.statistic.RPNcalculator"
+	     expression="becomeUninfectiousRate.t:BDskyline 1 samplingProportion.t:BDskyline - *">
+	  <parameter idref="becomeUninfectiousRate.t:BDskyline"/>
+	  <parameter idref="samplingProportion.t:BDskyline"/>
+	</log>
+    </logger>
+
+    <logger id="screenlog" logEvery="1000">
+        <log idref="posterior"/>
+        <log id="ESS.0" spec="util.ESS" arg="@posterior"/>
+        <log idref="likelihood"/>
+        <log idref="prior"/>
+	<log idref="becomeUninfectiousRate.t:BDskyline"/>
+	<log idref="reproductiveNumber.t:BDskyline"/>
+	<log idref="death"/>
+    </logger>
+
+    <!--logger id="treelog.t:BDskyline" fileName="OUTFILE.trees" logEvery="5000" mode="tree">
+        <log id="TreeWithMetaDataLogger.t:BDskyline" spec="beast.evolution.tree.TreeWithMetaDataLogger" tree="@Tree.t:BDskyline"/>
+    </logger-->
+
+</run>
+
+</beast>
